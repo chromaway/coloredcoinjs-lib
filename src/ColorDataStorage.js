@@ -45,12 +45,33 @@ ColorDataStorage.prototype._saveRecords = function(records) {
   this.store.set(this.colorTxsDBKey, records)
 }
 
+ColorDataStorage.prototype._eventuallySave = function() {
+  var self = this
+    , fn = function () {
+        if (self.dirty)
+          initTimeout()
+        else {
+          self.store.set(self.colorTxsDBKey, self.colorTxRecords)
+          self.timeout = false
+          self.dirty = false
+        }
+      }
+    , initTimeout = function () {
+        self.timeout = setTimeout(fn, 100);
+      }
+  if (!self.timeout) 
+    initTimeout()
+  else
+    self.dirty = true;
+}
+
+
 /**
  * @param {ColorDataRecord} data
  * @return {ColorDataRecord}
  * @throws {Error} If exists and colorValues not equal
  */
-ColorDataStorage.prototype.add = function(data) {
+ColorDataStorage.prototype.add = function(data, optDontSave) {
   verify.object(data)
   verify.number(data.colorId)
   verify.txId(data.txId)
@@ -72,7 +93,11 @@ ColorDataStorage.prototype.add = function(data) {
     outIndex: data.outIndex,
     value: data.value
   })
-  this._saveRecords(records)
+
+  if (! optDontSave)
+    this._saveRecords(records)
+  else
+    this.colorTxRecords = records
 
   return _.clone(_.last(records))
 }

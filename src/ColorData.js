@@ -54,6 +54,7 @@ ColorData.prototype.fetchColorValue = function(txId, outIndex, colorDefinition) 
  */
 ColorData.prototype.scanTx = function(tx, outputIndices, colorDefinition, getTxFn, cb) {
   verify.Transaction(tx)
+
   if (outputIndices !== null) {
     verify.array(outputIndices)
     outputIndices.forEach(verify.number)
@@ -82,23 +83,28 @@ ColorData.prototype.scanTx = function(tx, outputIndices, colorDefinition, getTxF
       inColorValues.push(colorValue)
     })
 
-    if (empty && !colorDefinition.isSpecialTx(tx))
-      return
+    if (!(empty && !colorDefinition.isSpecialTx(tx)))
+      return Q.ninvoke(colorDefinition, 'runKernel', tx, inColorValues, getTxFn)
+             .then(function(outColorValues) {
+               var asTransaction = !!(self._storage && self._storage._eventuallySave),
+                   added = false;
+               outColorValues.forEach(function(colorValue, index) {
+                 var skipAdd = colorValue === null ||
+                   (outputIndices !== null && outputIndices.indexOf(index) === -1)
 
-    return Q.ninvoke(colorDefinition, 'runKernel', tx, inColorValues, getTxFn).then(function(outColorValues) {
-      outColorValues.forEach(function(colorValue, index) {
-        var skipAdd = colorValue === null || (outputIndices !== null && outputIndices.indexOf(index) === -1)
-
-        if (!skipAdd)
-          self._storage.add({
-            colorId: colorDefinition.getColorId(),
-            txId: tx.getId(),
-            outIndex: index,
-            value: colorValue.getValue()
-          })
-      })
-    })
-
+                 if (!skipAdd) {
+                   added = true;
+                   self._storage.add({
+                     colorId: colorDefinition.getColorId(),
+                     txId: tx.getId(),
+                     outIndex: index,
+                     value: colorValue.getValue()
+                   }, asTransaction)
+                 }
+               })
+               if (asTransaction && added)
+                 self._storage._eventuallySave()
+             })
   }).done(function(){ cb(null) }, function(error) { cb(error) })
 }
 
