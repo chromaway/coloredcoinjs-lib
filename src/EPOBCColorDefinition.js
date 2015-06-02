@@ -163,6 +163,8 @@ function getXferAffectingInputs(tx, padding, outIndex) {
 
     inputRunningSum += valueWop
   }
+  // check if output is completely filled
+  if (inputRunningSum < outPrecSum + outValueWop) { return [] }
 
   return affectingInputs
 }
