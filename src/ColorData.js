@@ -144,7 +144,10 @@ ColorData.prototype.getCoinColorValue = function (coin, colorDefinition, getTxFn
   var extraTx = {}
   if (coin.txId instanceof bitcoin.Transaction) {
     extraTx[coin.txId.getId()] = coin.txId
-    coin.txId = coin.txId.getId()
+    coin = {
+      txId: coin.txId.getId(),
+      outIndex: coin.outIndex
+    }
   }
 
   verify.txId(coin.txId)
