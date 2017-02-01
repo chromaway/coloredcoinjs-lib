@@ -56,12 +56,12 @@ ComposedTx.prototype.addTxIns = function (txIns) {
     verify.txId(txIn.txId)
     verify.number(txIn.outIndex)
 
-    self.txIns.push({txId: txIn.txId, outIndex: txIn.outIndex})
+    self.txIns.push(txIn)
 
-    if (!_.isUndefined(txIn.sequence)) {
+/*    if (!_.isUndefined(txIn.sequence)) {
       verify.number(txIn.sequence)
       _.last(self.txIns).sequence = txIn.sequence
-    }
+    }*/
   })
 }
 

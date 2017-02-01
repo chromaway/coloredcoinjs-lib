@@ -84,7 +84,7 @@ SimpleOperationalTx.prototype.selectCoins = function (colorValue, feeEstimator, 
 
     var neededValue = colorValue.getValue()
     if (feeEstimator !== null) {
-      neededValue += feeEstimator.estimateRequiredFee({extraTxIns: coins.length}).getValue()
+      neededValue += feeEstimator.estimateRequiredFee({txIns: coins.length}).getValue()
     }
 
     return totalValue >= neededValue
